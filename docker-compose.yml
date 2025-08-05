@@ -1,0 +1,36 @@
+services:
+  nginx_story_valut:
+    container_name: nginx_story_valut
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php_story_valut
+      - db_story_valut
+
+  php_story_valut:
+    container_name: php_story_valut
+    build:
+      context: .
+      dockerfile: ./docker/php/.Dockerfile
+    volumes:
+      - ./project/:/var/www/story_valut
+    environment:
+      - DB_HOST=db
+      - DB_NAME=story_valut
+      - DB_USER=root
+      - DB_PASSWORD=root
+
+  db_story_valut:
+    container_name: db_story_valut
+    image: mariadb:11.8.2-ubi9
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=story_valut
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker/db:/var/lib/mysql

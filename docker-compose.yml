@@ -16,6 +16,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/php/.Dockerfile
+    user: "${USER_ID}:${GROUP_ID}"
     volumes:
       - ./project/:/var/www/story_valut
     environment:

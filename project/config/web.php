@@ -1,5 +1,8 @@
 <?php
 
+use app\services\verification\HumanVerificationInterface;
+use app\services\verification\VerificationFactory;
+
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
 
@@ -39,18 +42,43 @@ $config = [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                 ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['error', 'warning', 'info', 'trace'],
+                    'categories' => ['recaptcha'],
+                    'logFile' => '@runtime/logs/recaptcha.log',
+                ],
             ],
         ],
         'db' => $db,
-        /*
+
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                '' => 'post/index',
+                'post/create' => 'post/create',
+                'post/edit/<id:\d+>/<token:\w+>' => 'post/edit',
+                'post/delete/<id:\d+>/<token:\w+>' => 'post/delete',
+                'post/confirm-delete/<id:\d+>/<token:\w+>' => 'post/confirm-delete',
             ],
         ],
-        */
+        'formatter' => [
+            'datetimeFormat' => 'php:d.m.Y H:i',
+            'dateFormat' => 'php:d.m.Y',
+            'timeFormat' => 'php:H:i:s',
+        ],
     ],
+    'container' => [
+        'singletons' => [
+            HumanVerificationInterface::class => function() {
+                $type = Yii::$app->params['captcha']['captchaType'] ?? 'simple';
+                $config = Yii::$app->params['captcha'][$type] ?? [];
+                return VerificationFactory::create($type, $config);
+            },
+        ],
+    ],
+
     'params' => $params,
 ];
 
@@ -60,7 +88,7 @@ if (YII_ENV_DEV) {
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
+        'allowedIPs' => ['172.22.0.1', '127.0.0.1', '::1'],
     ];
 
     $config['bootstrap'][] = 'gii';
